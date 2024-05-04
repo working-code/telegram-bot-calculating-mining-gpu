@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+    application:
+        build:
+            context: ./docker/php-fpm
+        image:       working-code/php-fpm
+        environment:
+            - PHP_IDE_CONFIG=serverName=tg-bot-calculating-mining
+        volumes:
+            - ./:/data/tg-bot-calculating-mining.local
+            - ./docker/php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+            - sock:/sock
+        working_dir: /data/tg-bot-calculating-mining.local
+        networks:
+            - tg-bot-calculating-mining
+
+    webserver:
+        image: nginx:alpine3.18
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./:/data/tg-bot-calculating-mining.local
+            - ./docker/nginx/tg-bot-calculating-mining.local.conf:/etc/nginx/conf.d/default.conf
+            - sock:/sock
+        networks:
+            - tg-bot-calculating-mining
+
+    db:
+        image: postgres:16-alpine3.18
+        command: postgres -c work_mem=16MB -c shared_buffers=1024MB -c maintenance_work_mem=1024MB
+        ports:
+            - "5432:5432"
+        volumes:
+            - tg_bot_calculating_mining_db:/var/lib/postgresql/data
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB}
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        networks:
+            - tg-bot-calculating-mining
+
+    redis:
+        image: redis:7.2.4-alpine
+        ports:
+            - ${REDIS_PORT}:${REDIS_PORT}
+        networks:
+            - tg-bot-calculating-mining
+
+volumes:
+    sock:
+    tg_bot_calculating_mining_db:
+
+networks:
+    tg-bot-calculating-mining:
+        driver: bridge
