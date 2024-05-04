@@ -10,3 +10,6 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+
+page.html
+pagePart.html
