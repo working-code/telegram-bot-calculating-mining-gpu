@@ -22,3 +22,36 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    _instanceof:
+        App\Component\TelegramDialog\DialogHandlerInterface:
+            tags: [ 'app.dialog_handler' ]
+        Telegram\Bot\Commands\CommandInterface:
+            tags: [ 'telegram.command' ]
+
+    App\Component\TelegramDialog\DialogManager:
+        arguments:
+            - !tagged_iterator app.dialog_handler
+
+    Telegram\Bot\Api:
+        lazy: true
+        arguments:
+            $token: '%env(TELEGRAM_BOT_API_TOKEN)%'
+        calls:
+            -   method: addCommands
+                arguments:
+                    - !tagged_iterator telegram.command
+
+    Redis:
+        class:   Redis
+        factory: Symfony\Component\Cache\Adapter\RedisAdapter::createConnection
+        arguments:
+            - '%env(REDIS_DSN)%'
+
+    redis_adapter:
+        class: Symfony\Component\Cache\Adapter\RedisTagAwareAdapter
+        arguments:
+            - '@Redis'
+            - 'tg_bot_calculating_mining'
+
+    GuzzleHttp\Client:
