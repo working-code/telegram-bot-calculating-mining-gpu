@@ -55,3 +55,7 @@ services:
             - 'tg_bot_calculating_mining'
 
     GuzzleHttp\Client:
+
+    App\Parser\HashRateParser:
+        arguments:
+            $hashRateUrl: '%env(HASHRATE_URL)%'
