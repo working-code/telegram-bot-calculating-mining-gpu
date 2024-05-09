@@ -59,3 +59,7 @@ services:
     App\Parser\HashRateParser:
         arguments:
             $hashRateUrl: '%env(HASHRATE_URL)%'
+
+    App\Parser\CurrencyParser:
+        arguments:
+            $currencyUrl: '%env(CURRENCY_URL)%'
