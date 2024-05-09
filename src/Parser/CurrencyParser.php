@@ -7,10 +7,12 @@ use App\DTO\CurrencyDTO;
 use App\Exception\ErrorGetPageException;
 use App\Exception\NotFoundException;
 use App\Helper\ValueFilterHelper;
+use App\Service\Cache;
 use App\Service\CurrencyService;
 use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Throwable;
 
 readonly class CurrencyParser
@@ -18,11 +20,12 @@ readonly class CurrencyParser
     use ParserTrait;
 
     public function __construct(
-        private string            $currencyUrl,
-        private Client            $httpClient,
-        private CurrencyService   $currencyService,
-        private LoggerInterface   $logger,
-        private ValueFilterHelper $valueFilterHelper,
+        private string                 $currencyUrl,
+        private Client                 $httpClient,
+        private CurrencyService        $currencyService,
+        private LoggerInterface        $logger,
+        private ValueFilterHelper      $valueFilterHelper,
+        private TagAwareCacheInterface $cache,
     ) {
     }
 
@@ -40,9 +43,13 @@ readonly class CurrencyParser
                 ->setAlias('USD')
                 ->setValue($this->valueFilterHelper->getFloatFrom($currencyList['USD']) ?? -1);
 
-            if ($usdCurrency) {
+            if (
+                $usdCurrency
+                && $usdCurrency->getValue() !== $usdCurrencyDTO->getValue()
+            ) {
                 $this->currencyService->updateCurrencyByCurrencyDTO($usdCurrency, $usdCurrencyDTO);
-            } else {
+                $this->cache->invalidateTags([Cache::CACHE_TAG_CURRENCY_USD]);
+            } elseif (!$usdCurrency) {
                 $this->currencyService->createCurrencyByCurrencyDTO($usdCurrencyDTO);
             }
         } catch (Throwable $exception) {

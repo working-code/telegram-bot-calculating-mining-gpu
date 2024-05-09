@@ -9,14 +9,20 @@ use App\Exception\NotFoundException;
 use App\Exception\ValidationErrorException;
 use App\Manager\CurrencyManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 readonly class CurrencyService
 {
+    private const CONVERT_SCALE = 4;
+
     public function __construct(
         private EntityManagerInterface $em,
         private CurrencyManager        $currencyManager,
         private ValidatorInterface     $validator,
+        private TagAwareCacheInterface $cache,
     ) {
     }
 
@@ -46,7 +52,6 @@ readonly class CurrencyService
     public function updateCurrencyByCurrencyDTO(Currency $currency, CurrencyDTO $currencyDTO, $flush = true): void
     {
         $currency
-            ->setAlias($currency->getAlias())
             ->setValue($currencyDTO->getValue());
         $errors = $this->validator->validate($currency);
 
@@ -57,6 +62,28 @@ readonly class CurrencyService
         if ($flush) {
             $this->currencyManager->emFlush();
         }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function convertRubInUsd(float $rub): float
+    {
+        $result = bcdiv((string)$rub, $this->getUsdValue(), self::CONVERT_SCALE);
+
+        return (float)$result;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function getUsdValue(): string
+    {
+        return $this->cache->get('currency_usd', function (ItemInterface $item): string {
+            $item->tag(Cache::CACHE_TAG_CURRENCY_USD);
+
+            return (string)$this->getUsdCurrency()->getValue();
+        });
     }
 
     /**
@@ -72,5 +99,15 @@ readonly class CurrencyService
         }
 
         return $currency;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function convertUsdInRub(float $usd): float
+    {
+        $result = bcmul((string)$usd, $this->getUsdValue(), self::CONVERT_SCALE);
+
+        return (float)$result;
     }
 }

@@ -17,12 +17,14 @@ use App\Service\CoinService;
 use App\Service\GpuService;
 use App\Service\WorkService;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DomCrawler\Crawler;
+use Throwable;
 
 readonly class HashRateParser
 {
+    use ParserTrait;
+
     public function __construct(
         private string            $hashRateUrl,
         private Client            $httpClient,
@@ -34,25 +36,25 @@ readonly class HashRateParser
     ) {
     }
 
-    /**
-     * @throws ErrorGetPageException
-     * @throws NotFoundException
-     */
     public function run(): void
     {
         ini_set('memory_limit', '256M');
 
-        $this->logger->info('Начало парсинга');
-        $this->logger->info('Обновление gpu');
-        $this->updateListGpu();
+        try {
+            $this->logger->info('Начало парсинга');
+            $this->logger->info('Обновление gpu');
+            $this->updateListGpu();
 
-        $this->logger->info('Обновление монет');
-        $this->updateListCoin();
+            $this->logger->info('Обновление монет');
+            $this->updateListCoin();
 
-        $this->logger->info('Обновление воркеров:');
-        $this->getUpdateWorks();
+            $this->logger->info('Обновление воркеров:');
+            $this->getUpdateWorks();
 
-        $this->logger->info('парсинг завершен');
+            $this->logger->info('парсинг завершен');
+        } catch (Throwable $exception) {
+            $this->logger->error($exception->getMessage());
+        }
     }
 
     /**
@@ -115,24 +117,6 @@ readonly class HashRateParser
         }
 
         return $gpuList;
-    }
-
-    /**
-     * @throws ErrorGetPageException
-     */
-    private function getPage(string $url): string
-    {
-        try {
-            $response = $this->httpClient->request('GET', $url);
-        } catch (GuzzleException $exception) {
-            throw new ErrorGetPageException(sprintf('GuzzleException. message: %s', $exception->getMessage()));
-        }
-
-        if ($response->getStatusCode() !== 200) {
-            throw new ErrorGetPageException(sprintf('Ошибка получения страницы %', $url));
-        }
-
-        return $response->getBody()->getContents();
     }
 
     /**

@@ -36,4 +36,19 @@ class WorkRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * @return Work[]
+     */
+    public function getWorksWithItemsAndCoinByGpu(Gpu $gpu): array
+    {
+        $qb = $this->createQueryBuilder('w', 'w.alias');
+        $qb->join('w.items', 'i', Expr\Join::WITH)
+            ->join('i.coin', 'c', Expr\Join::WITH)
+            ->addSelect('i, c')
+            ->andWhere($qb->expr()->eq('w.gpu', ':gpu'))
+            ->setParameter('gpu', $gpu);
+
+        return $qb->getQuery()->getResult();
+    }
 }

@@ -99,4 +99,14 @@ readonly class WorkService
 
         return $workRepository->getWorksWithItemByGpu($gpu);
     }
+
+    /**
+     * @return Work[]
+     */
+    public function getWorksWithItemsAndCoinByGpu(Gpu $gpu): array
+    {
+        $workRepository = $this->em->getRepository(Work::class);
+
+        return $workRepository->getWorksWithItemsAndCoinByGpu($gpu);
+    }
 }

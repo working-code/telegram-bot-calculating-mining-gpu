@@ -12,10 +12,16 @@ use App\Exception\ValidationErrorException;
 use App\Manager\RigItemManager;
 use App\Manager\RigManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 readonly class RigService
 {
+    private const  COUNT_OF_WATTS_IN_KW          = 1000;
+    private const  COUNT_OF_DAY_IN_MONTH         = 30;
+    private const  COUNT_OF_DAY_IN_YEAR          = 365;
+    private const  COUNT_OF_PROFITABLE_ALGORITHM = 5;
+
     public function __construct(
         private RigManager             $rigManager,
         private UserService            $userService,
@@ -23,7 +29,86 @@ readonly class RigService
         private EntityManagerInterface $em,
         private GpuService             $gpuService,
         private RigItemManager         $rigItemManager,
+        private WorkService            $workService,
+        private CurrencyService        $currencyService,
     ) {
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function getCalculationByRig(Rig $rig): array
+    {
+        $electricityCost = $this->currencyService->convertRubInUsd($rig->getElectricityCost());
+        $efficiency = 100 / $rig->getPowerSupplyEfficiency();
+        $items = [];
+        $totalRows = [];
+
+        foreach ($rig->getItems() as $rigItem) {
+            $works = $this->workService->getWorksWithItemsAndCoinByGpu($rigItem->getGpu());
+            $workList = [];
+
+            foreach ($works as $work) {
+                $workRevenue = 0;
+                $workPowerConsumption = 0;
+
+                foreach ($work->getItems() as $item) {
+                    $workRevenue += $item->getCoin()->getPrice() * $item->getCount() * $rigItem->getCount();
+                    $workPowerConsumption += $item->getPowerConsumption() * $rigItem->getCount();
+                }
+
+                $profit = $workRevenue - $workPowerConsumption
+                    / self::COUNT_OF_WATTS_IN_KW * $efficiency * $electricityCost;
+
+                $workList[] = [
+                    'profitInUsd' => $profit,
+                    'profitInRub' => $this->currencyService->convertUsdInRub($profit),
+                    'work'        => $work,
+                ];
+            }
+
+            usort($workList, function (array $a, array $b) {
+                return $b['profitInUsd'] <=> $a['profitInUsd'];
+            });
+            $workList = array_slice($workList, 0, self::COUNT_OF_PROFITABLE_ALGORITHM);
+
+            $items[] = [
+                'gpuName'  => $rigItem->getGpu()->getName(),
+                'gpuCount' => $rigItem->getCount(),
+                'works'    => $workList,
+            ];
+
+            //calculation profit by works for rig
+            foreach ($workList as $workIndex => $itemData) {
+                if (!isset($totalRows[$workIndex])) {
+                    $totalRows[$workIndex]['profitPerDayInUsd'] = -$rig->getMotherboardConsumption()
+                        / self::COUNT_OF_WATTS_IN_KW * $efficiency * $electricityCost;
+                }
+
+                $totalRows[$workIndex]['profitPerDayInUsd'] += $itemData['profitInUsd'];
+            }
+
+            foreach ($totalRows as $rowIndex => $row) {
+                $totalRows[$rowIndex]['profitPerDayInRub'] = $this->currencyService->convertUsdInRub(
+                    $row['profitPerDayInUsd']
+                );
+
+                $totalRows[$rowIndex]['profitPerMonthInUsd'] = $row['profitPerDayInUsd'] * self::COUNT_OF_DAY_IN_MONTH;
+                $totalRows[$rowIndex]['profitPerMonthInRub'] = $this->currencyService->convertUsdInRub(
+                    $totalRows[$rowIndex]['profitPerMonthInUsd']
+                );
+
+                $totalRows[$rowIndex]['profitPerYearInUsd'] = $row['profitPerDayInUsd'] * self::COUNT_OF_DAY_IN_YEAR;
+                $totalRows[$rowIndex]['profitPerYearInRub'] = $this->currencyService->convertUsdInRub(
+                    $totalRows[$rowIndex]['profitPerYearInUsd']
+                );
+            }
+        }
+
+        return [
+            'totalByWorks' => $totalRows,
+            'items'        => $items,
+        ];
     }
 
     /**
