@@ -35,6 +35,12 @@ class Work
     #[ORM\OneToMany(targetEntity: WorkItem::class, mappedBy: 'work', orphanRemoval: true, indexBy: 'alias')]
     private Collection $items;
 
+    #[ORM\Column(nullable: true)]
+    private ?array $overclockSettings = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?array $minerSettings = null;
+
     public function __construct()
     {
         $this->items = new ArrayCollection();
@@ -90,6 +96,30 @@ class Work
     public function setAlias(string $alias): self
     {
         $this->alias = $alias;
+
+        return $this;
+    }
+
+    public function getOverclockSettings(): ?array
+    {
+        return $this->overclockSettings;
+    }
+
+    public function setOverclockSettings(?array $overclockSettings): static
+    {
+        $this->overclockSettings = $overclockSettings;
+
+        return $this;
+    }
+
+    public function getMinerSettings(): ?array
+    {
+        return $this->minerSettings;
+    }
+
+    public function setMinerSettings(?array $minerSettings): static
+    {
+        $this->minerSettings = $minerSettings;
 
         return $this;
     }

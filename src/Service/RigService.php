@@ -14,6 +14,8 @@ use App\Manager\RigManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 readonly class RigService
 {
@@ -31,13 +33,23 @@ readonly class RigService
         private RigItemManager         $rigItemManager,
         private WorkService            $workService,
         private CurrencyService        $currencyService,
+        private TagAwareCacheInterface $cache,
     ) {
+    }
+
+    public function getCalculationByRig(Rig $rig): array
+    {
+        return $this->cache->get('calculation_by_rig_' . $rig->getId(), function (ItemInterface $item) use ($rig): array {
+            $item->tag(Cache::CACHE_TAG_CALCULATION_BY_RIG);
+
+            return $this->getCalculationForRig($rig);
+        });
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    public function getCalculationByRig(Rig $rig): array
+    private function getCalculationForRig(Rig $rig): array
     {
         $electricityCost = $this->currencyService->convertRubInUsd($rig->getElectricityCost());
         $efficiency = 100 / $rig->getPowerSupplyEfficiency();
@@ -217,7 +229,7 @@ readonly class RigService
         $this->rigItemManager->emFlush();
     }
 
-    private function getRigById(int $rigId): ?Rig
+    public function getRigById(int $rigId): ?Rig
     {
         $rigRepository = $this->em->getRepository(Rig::class);
 

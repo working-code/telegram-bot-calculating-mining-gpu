@@ -6,7 +6,6 @@ namespace App\Report;
 use App\Entity\Rig;
 use App\Exception\NotFoundException;
 use App\Service\RigService;
-use Psr\Cache\InvalidArgumentException;
 
 readonly class ProfitableAlgorithmsReport
 {
@@ -17,7 +16,6 @@ readonly class ProfitableAlgorithmsReport
 
     /**
      * @throws NotFoundException
-     * @throws InvalidArgumentException
      */
     public function getReportByTelegramId(int $telegramId): string
     {

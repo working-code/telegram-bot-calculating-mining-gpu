@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Gpu;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -40,6 +41,18 @@ class GpuRepository extends ServiceEntityRepository
     public function getAllWithAlias(): array
     {
         $qb = $this->createQueryBuilder('g', 'g.alias');
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @return Gpu[]
+     */
+    public function getAllGpuWithWorks(): array
+    {
+        $qb = $this->createQueryBuilder('g');
+        $qb->join('g.works', 'w', Join::WITH)
+            ->addSelect('w');
 
         return $qb->getQuery()->getResult();
     }

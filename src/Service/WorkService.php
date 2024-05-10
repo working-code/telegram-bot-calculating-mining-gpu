@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\DTO\AdditionalWorkDataDTO;
 use App\DTO\WorkDTO;
 use App\Entity\Gpu;
 use App\Entity\Work;
@@ -81,6 +82,31 @@ readonly class WorkService
                     throw new ValidationErrorException($errors);
                 }
             }
+        }
+
+        if ($flush) {
+            $this->workManager->emFlush();
+        }
+
+        return $work;
+    }
+
+    /**
+     * @throws ValidationErrorException
+     */
+    public function updateWorkByAdditionalWorkDataDTO(
+        Work                  $work,
+        AdditionalWorkDataDTO $additionalWorkDataDTO,
+        bool                  $flush = true
+    ): Work {
+        $work
+            ->setOverclockSettings($additionalWorkDataDTO->getOverclockSettings())
+            ->setMinerSettings($additionalWorkDataDTO->getMinerSettings());
+
+        $errors = $this->validator->validate($work);
+
+        if ($errors->count()) {
+            throw new ValidationErrorException($errors);
         }
 
         if ($flush) {

@@ -73,6 +73,19 @@ readonly class GpuService
         return $gpuRepository->getAllWithAlias();
     }
 
+    /**
+     * @return Gpu[]
+     */
+    public function getAllGpuWithWorks(): array
+    {
+        $gpuRepository = $this->em->getRepository(Gpu::class);
+
+        return $gpuRepository->getAllGpuWithWorks();
+    }
+
+    /**
+     * @return string[]
+     */
     public function getAllGpuAlias(): array
     {
         $gpuRepository = $this->em->getRepository(Gpu::class);

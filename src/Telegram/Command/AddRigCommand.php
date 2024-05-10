@@ -23,7 +23,7 @@ class AddRigCommand extends Command
      */
     public function handle(): void
     {
-        $addRigDialog = (new AddRigDialog($this->update->getChat()->id));
+        $addRigDialog = new AddRigDialog($this->update->getChat()->id);
         $this->dialogManager->create($addRigDialog);
     }
 }

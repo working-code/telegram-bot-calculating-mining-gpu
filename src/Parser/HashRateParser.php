@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Parser;
 
+use App\DTO\AdditionalWorkDataDTO;
 use App\DTO\CoinDTO;
 use App\DTO\GpuDTO;
 use App\DTO\WorkDTO;
@@ -36,7 +37,81 @@ readonly class HashRateParser
     ) {
     }
 
-    public function run(): void
+    public function getAdditionalData(): void
+    {
+        ini_set('memory_limit', '256M');
+
+        try {
+            $gpus = $this->gpuService->getAllGpuWithWorks();
+
+            foreach ($gpus as $gpu) {
+                $this->logger->info('-- Получаю works для ' . $gpu->getName());
+                $this->updateAdditionalWorkDataForGpu($gpu);
+
+                $this->gpuService->getGpuManager()->emFlush();
+            }
+        } catch (Throwable $exception) {
+            $this->logger->error($exception->getMessage());
+        }
+    }
+
+    /**
+     * @throws ErrorGetPageException
+     */
+    public function updateAdditionalWorkDataForGpu(Gpu $gpu): void
+    {
+        foreach ($gpu->getWorks() as $work) {
+            $url = sprintf(
+                '%s/gpus/%s/%s',
+                $this->hashRateUrl,
+                $gpu->getAlias(),
+                $work->getAlias(),
+            );
+
+            $pageHtml = $this->getPage($url);
+            $crawler = new Crawler($pageHtml);
+            $contentCrawler = $crawler->filter('div.contentContainer>div')->eq(3)->filter('div.content');
+
+            //Overclock settings
+            $overclockSettingsCrawler = $contentCrawler->eq(1)->filter('table>tr')
+                ->reduce(function (Crawler $node) {
+                    return $node->matches('tr>td.infoOCDesc');
+                });
+            $overclockSettingList = [];
+
+            for ($i = 0; $i < $overclockSettingsCrawler->count(); $i++) {
+                $name = $overclockSettingsCrawler->eq($i)->filter('td.infoOCDesc')->text();
+                $value = $overclockSettingsCrawler->eq($i)->filter('td.infoOC')->innerText();
+
+                $overclockSettingList[$name] = $value;
+            }
+
+            //miner settings
+            $settingForMinerCrawler = $contentCrawler->eq(3)->filter('div.description>div');
+            $minerSettingList = [];
+
+            $valuesCrawler = $settingForMinerCrawler->reduce(fn (Crawler $node) => $node->matches('div>span'));
+            $nameCrawler = $settingForMinerCrawler->reduce(fn (Crawler $node) => !$node->matches('div>span'));
+
+            for ($i = 0; $i < $nameCrawler->count(); $i++) {
+                $minerSettingList[$nameCrawler->eq($i)->text()] = $valuesCrawler->eq($i)->text();
+            }
+
+            $additionalWorkDataDTO = (new AdditionalWorkDataDTO())
+                ->setOverclockSettings($overclockSettingList)
+                ->setMinerSettings($minerSettingList);
+
+            try {
+                $this->workService->updateWorkByAdditionalWorkDataDTO($work, $additionalWorkDataDTO, false);
+            } catch (ValidationErrorException $e) {
+                $this->logger->error($e->getMessage());
+
+                continue;
+            }
+        }
+    }
+
+    public function getMainData(): void
     {
         ini_set('memory_limit', '256M');
 
