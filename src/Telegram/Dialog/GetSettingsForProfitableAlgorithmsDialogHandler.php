@@ -12,7 +12,7 @@ use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Objects\Update;
 
-class GetSettingsForProfitableAlgorithmsHandler extends BaseDialogHandler
+class GetSettingsForProfitableAlgorithmsDialogHandler extends BaseDialogHandler
 {
     use askChoiceRigTrait;
 

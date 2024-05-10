@@ -30,4 +30,9 @@ readonly class RigManager
 
         return $rig;
     }
+
+    public function remove(Rig $rig): void
+    {
+        $this->em->remove($rig);
+    }
 }

@@ -8,5 +8,5 @@ use App\Component\TelegramDialog\BaseDialog;
 class GetSettingsForProfitableAlgorithmsDialog extends BaseDialog
 {
     protected array  $steps        = ['askChoiceRig', 'createReport'];
-    protected string $handlerClass = GetSettingsForProfitableAlgorithmsHandler::class;
+    protected string $handlerClass = GetSettingsForProfitableAlgorithmsDialogHandler::class;
 }

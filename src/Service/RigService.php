@@ -37,13 +37,34 @@ readonly class RigService
     ) {
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function removeRigById(int $rigId): void
+    {
+        $rig = $this->getRigById($rigId);
+        $this->rigManager->remove($rig);
+        $this->rigManager->emFlush();
+
+        $this->cache->delete(Cache::CALCULATION_BY_RIG_KEY . $rig->getId());
+    }
+
+    public function getRigById(int $rigId): ?Rig
+    {
+        $rigRepository = $this->em->getRepository(Rig::class);
+
+        return $rigRepository->find($rigId);
+    }
+
     public function getCalculationByRig(Rig $rig): array
     {
-        return $this->cache->get('calculation_by_rig_' . $rig->getId(), function (ItemInterface $item) use ($rig): array {
-            $item->tag(Cache::CACHE_TAG_CALCULATION_BY_RIG);
+        return $this->cache->get(
+            Cache::CALCULATION_BY_RIG_KEY . $rig->getId(),
+            function (ItemInterface $item) use ($rig): array {
+                $item->tag(Cache::CACHE_TAG_CALCULATION_BY_RIG);
 
-            return $this->getCalculationForRig($rig);
-        });
+                return $this->getCalculationForRig($rig);
+            });
     }
 
     /**
@@ -227,12 +248,5 @@ readonly class RigService
         }
 
         $this->rigItemManager->emFlush();
-    }
-
-    public function getRigById(int $rigId): ?Rig
-    {
-        $rigRepository = $this->em->getRepository(Rig::class);
-
-        return $rigRepository->find($rigId);
     }
 }
