@@ -28,15 +28,15 @@ services:
             - tg-bot-calculating-mining
 
     db:
-        image: postgres:16-alpine3.18
+        image:   postgres:16-alpine3.18
         command: postgres -c work_mem=16MB -c shared_buffers=1024MB -c maintenance_work_mem=1024MB
         ports:
             - "5432:5432"
         volumes:
             - tg_bot_calculating_mining_db:/var/lib/postgresql/data
         environment:
-            POSTGRES_DB: ${POSTGRES_DB}
-            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_DB:       ${POSTGRES_DB}
+            POSTGRES_USER:     ${POSTGRES_USER}
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
         networks:
             - tg-bot-calculating-mining
@@ -45,6 +45,31 @@ services:
         image: redis:7.2.4-alpine
         ports:
             - ${REDIS_PORT}:${REDIS_PORT}
+        networks:
+            - tg-bot-calculating-mining
+
+    rabbitmq:
+        image:       rabbitmq:3.13.0-management-alpine
+        working_dir: /data/tg-bot-calculating-mining.local
+        hostname:    rabbit-mq
+        ports:
+            - 15672:15672
+            - 5672:5672
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+        networks:
+            - tg-bot-calculating-mining
+
+    supervisor:
+        build:       docker/supervisor
+        depends_on:
+            - rabbitmq
+        volumes:
+            - ./:/data/tg-bot-calculating-mining.local
+            - ./docker/supervisor/supervisord.conf:/etc/supervisor/supervisord.conf
+        working_dir: /data/tg-bot-calculating-mining.local
+        command: [ "supervisord", "-c", "/etc/supervisor/supervisord.conf" ]
         networks:
             - tg-bot-calculating-mining
 

@@ -17,7 +17,7 @@ readonly class ProfitableAlgorithmsReport
     /**
      * @throws NotFoundException
      */
-    public function getReportByTelegramId(int $telegramId): string
+    public function getReportByTelegramId(int $telegramId): array
     {
         $rigs = $this->rigService->getRigsByTelegramId($telegramId);
 
@@ -25,15 +25,21 @@ readonly class ProfitableAlgorithmsReport
             throw new NotFoundException('Сначала создайте риг');
         }
 
-        $res = "Для каждого алгоритма указан доход в сутки c указанного количества карт\n\n";
+        $report = [];
+        $reportPart = "Для каждого алгоритма указан доход в сутки c указанного количества карт\n\n";
 
         foreach ($rigs as $rig) {
+            if ($rig->getItems()->count() === 0) {
+                continue;
+            }
+
             $calculationByRig = $this->rigService->getCalculationByRig($rig);
-            $res .= $this->createReport($calculationByRig, $rig);
-            $res .= "\n\n";
+            $reportPart .= $this->createReport($calculationByRig, $rig);
+            $report[] = $reportPart;
+            $reportPart = '';
         }
 
-        return $res;
+        return $report;
     }
 
     private function createReport(array $calculationByRig, Rig $rig): string
@@ -96,7 +102,7 @@ readonly class ProfitableAlgorithmsReport
             );
         }
 
-        $report .= '`';
+        $report .= "`\n\n";
 
         return $report;
     }

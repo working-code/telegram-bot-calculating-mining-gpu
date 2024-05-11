@@ -13,6 +13,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.2",
+        "ext-bcmath": "*",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-redis": "*",
@@ -22,6 +23,7 @@
         "doctrine/orm": "^3.1",
         "guzzlehttp/guzzle": "^7.0",
         "irazasyed/telegram-bot-sdk": "^3.14",
+        "php-amqplib/rabbitmq-bundle": "^2.16",
         "phpdocumentor/reflection-docblock": "^5.4",
         "phpstan/phpdoc-parser": "^1.28",
         "symfony/console": "7.0.*",
@@ -36,8 +38,7 @@
         "symfony/serializer": "7.0.*",
         "symfony/translation": "7.0.*",
         "symfony/validator": "7.0.*",
-        "symfony/yaml": "7.0.*",
-        "ext-bcmath": "*"
+        "symfony/yaml": "7.0.*"
     },
     "config": {
         "allow-plugins": {

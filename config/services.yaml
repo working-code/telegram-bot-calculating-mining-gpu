@@ -63,3 +63,14 @@ services:
     App\Parser\CurrencyParser:
         arguments:
             $currencyUrl: '%env(CURRENCY_URL)%'
+
+    App\Service\AsyncService:
+        calls:
+            - [
+                'addProducer',
+                [ !php/const App\Service\AsyncService::CREATE_REPORT_PROFITABLE_ALGORITHMS, '@old_sound_rabbit_mq.create_report_profitable_algorithms_producer' ]
+            ]
+            - [
+                'addProducer',
+                [ !php/const App\Service\AsyncService::CREATE_REPORT_SETTINGS_FOR_PROFITABLE_ALGORITHMS, '@old_sound_rabbit_mq.create_report_settings_for_profitable_algorithms_producer' ]
+            ]

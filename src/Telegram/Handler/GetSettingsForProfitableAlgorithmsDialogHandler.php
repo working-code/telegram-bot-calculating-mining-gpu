@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace App\Telegram\Handler;
 
 use App\Component\TelegramDialog\BaseDialogHandler;
-use App\Exception\NotFoundException;
+use App\DTO\Output\CreateReportSettingsForProfitableAlgorithmsDTO;
 use App\Helper\ValueFilterHelper;
-use App\Report\SettingsForProfitableAlgorithmsReport;
+use App\Service\AsyncService;
 use App\Service\RigService;
+use Symfony\Component\Serializer\SerializerInterface;
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Objects\Update;
@@ -17,16 +18,16 @@ class GetSettingsForProfitableAlgorithmsDialogHandler extends BaseDialogHandler
     use askChoiceRigTrait;
 
     public function __construct(
-        Api                                                    $bot,
-        private readonly RigService                            $rigService,
-        private readonly ValueFilterHelper                     $valueFilterHelper,
-        private readonly SettingsForProfitableAlgorithmsReport $settingsForProfitableAlgorithmsReport,
+        Api                                  $bot,
+        private readonly RigService          $rigService,
+        private readonly ValueFilterHelper   $valueFilterHelper,
+        private readonly AsyncService        $asyncService,
+        private readonly SerializerInterface $serializer,
     ) {
         parent::__construct($bot);
     }
 
     /**
-     * @throws NotFoundException
      * @throws TelegramSDKException
      */
     public function createReport(Update $update): void
@@ -34,16 +35,17 @@ class GetSettingsForProfitableAlgorithmsDialogHandler extends BaseDialogHandler
         if ($this->hasCallbackData($update)) {
             $rigId = $this->valueFilterHelper->getIntFrom($update->callbackQuery->data);
             $this->deleteMessage($update);
+            $this->sendMessage('Идет расчет ...');
 
-            $messages = $this->settingsForProfitableAlgorithmsReport->getReportByRigId($rigId);
+            $createReportSettingsForProfitableAlgorithmsDTO = new CreateReportSettingsForProfitableAlgorithmsDTO(
+                $rigId,
+                $this->dialog->getChatId()
+            );
 
-            foreach ($messages as $message) {
-                $this->bot->sendMessage([
-                    'chat_id'    => $this->dialog->getChatId(),
-                    'text'       => $message,
-                    'parse_mode' => 'Markdown',
-                ]);
-            }
+            $this->asyncService->publishToExchange(
+                AsyncService::CREATE_REPORT_SETTINGS_FOR_PROFITABLE_ALGORITHMS,
+                $this->serializer->serialize($createReportSettingsForProfitableAlgorithmsDTO, 'json')
+            );
         }
     }
 }

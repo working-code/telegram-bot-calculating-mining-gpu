@@ -11,7 +11,7 @@ use Telegram\Bot\Commands\Command;
 class GetSettingsForProfitableAlgorithmsCommand extends Command
 {
     protected string $name        = 'getSettingsForProfitableAlgorithms';
-    protected string $description = 'Получить настройки для карт по 5-ти прибыльным алгоритмам';
+    protected string $description = 'Получить настройки для карт по пяти прибыльным алгоритмам';
 
     public function __construct(
         private readonly DialogManager $dialogManager,
