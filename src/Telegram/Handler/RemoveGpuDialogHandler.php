@@ -1,13 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Telegram\Dialog;
+namespace App\Telegram\Handler;
 
 use App\Component\TelegramDialog\BaseDialogHandler;
 use App\Exception\NotFoundException;
 use App\Helper\ValueFilterHelper;
 use App\Service\RigItemService;
 use App\Service\RigService;
+use App\Telegram\Dialog\RemoveGpuDialog;
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Keyboard\Keyboard;

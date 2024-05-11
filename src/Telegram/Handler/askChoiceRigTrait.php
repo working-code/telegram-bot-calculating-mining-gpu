@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Telegram\Dialog;
+namespace App\Telegram\Handler;
 
 use Telegram\Bot\Keyboard\Keyboard;
 use Telegram\Bot\Objects\Update;

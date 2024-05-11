@@ -6,6 +6,7 @@ namespace App\Telegram\Dialog;
 use App\Component\TelegramDialog\BaseDialog;
 use App\DTO\RigDTO;
 use App\DTO\UserDTO;
+use App\Telegram\Handler\AddRigDialogHandler;
 
 class AddRigDialog extends BaseDialog
 {

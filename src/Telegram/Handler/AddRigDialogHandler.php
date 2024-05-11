@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Telegram\Dialog;
+namespace App\Telegram\Handler;
 
 use App\Component\TelegramDialog\BaseDialogHandler;
 use App\DTO\RigDTO;
@@ -9,6 +9,7 @@ use App\Exception\ValidationErrorException;
 use App\Helper\ValidationHelper;
 use App\Helper\ValueFilterHelper;
 use App\Service\RigService;
+use App\Telegram\Dialog\AddRigDialog;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;

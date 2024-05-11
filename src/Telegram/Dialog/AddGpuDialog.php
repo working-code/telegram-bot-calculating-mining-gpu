@@ -5,6 +5,7 @@ namespace App\Telegram\Dialog;
 
 use App\Component\TelegramDialog\BaseDialog;
 use App\DTO\GpuDTO;
+use App\Telegram\Handler\AddGpuDialogHandler;
 
 class AddGpuDialog extends BaseDialog
 {

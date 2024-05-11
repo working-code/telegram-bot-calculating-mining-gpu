@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Telegram\Dialog;
+namespace App\Telegram\Handler;
 
 use App\Component\TelegramDialog\BaseDialogHandler;
 use App\Exception\NotFoundException;
