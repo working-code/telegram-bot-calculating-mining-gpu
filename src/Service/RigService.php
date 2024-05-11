@@ -160,48 +160,6 @@ readonly class RigService
     }
 
     /**
-     * @throws NotFoundException
-     */
-    public function getInfoByAllRigsByTelegramId(int $telegramId): string
-    {
-        $rigs = $this->getRigsByTelegramId($telegramId);
-
-        if (!$rigs) {
-            throw new NotFoundException('Rigs not found');
-        }
-
-        $report = sprintf("%s\n\n", '*Отчет по ригам.*');
-
-        foreach ($rigs as $rig) {
-            $report .= sprintf(
-                "Название: *%s*\nСтоимость электроэнергии: *%.2f руб*\nКПД БП: *%d%%*\nПотребление тушки: *%d ватт*\n",
-                $rig->getName(),
-                $rig->getElectricityCost(),
-                $rig->getPowerSupplyEfficiency(),
-                $rig->getMotherboardConsumption(),
-            );
-
-            if ($rig->getItems()->count() === 0) {
-                $report .= "Видеокарт *нет*\n";
-            } else {
-                $report .= "*Видеокарты:*\n";
-
-                foreach ($rig->getItems() as $item) {
-                    $report .= sprintf(
-                        "%s x %d\n",
-                        $item->getGpu()->getName(),
-                        $item->getCount()
-                    );
-                }
-            }
-
-            $report .= "\n";
-        }
-
-        return $report;
-    }
-
-    /**
      * @return Rig[]
      */
     public function getRigsByTelegramId(int $telegramId): array
