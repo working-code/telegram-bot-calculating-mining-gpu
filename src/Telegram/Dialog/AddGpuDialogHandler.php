@@ -6,6 +6,7 @@ namespace App\Telegram\Dialog;
 use App\Component\TelegramDialog\BaseDialogHandler;
 use App\DTO\GpuDTO;
 use App\Entity\Enum\GpuBrand;
+use App\Exception\NotFoundException;
 use App\Helper\ValidationHelper;
 use App\Helper\ValueFilterHelper;
 use App\Service\GpuService;
@@ -171,6 +172,7 @@ class AddGpuDialogHandler extends BaseDialogHandler
     /**
      * @noinspection PhpUnused
      * @throws TelegramSDKException
+     * @throws NotFoundException
      */
     public function checkResponseAddGpu(Update $update): void
     {

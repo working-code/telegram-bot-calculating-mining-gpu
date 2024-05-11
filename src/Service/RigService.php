@@ -38,6 +38,21 @@ readonly class RigService
     }
 
     /**
+     * @throws NotFoundException
+     */
+    public function getRigWithRigItemAndGpu(int $rigId): Rig
+    {
+        $rigRepository = $this->em->getRepository(Rig::class);
+        $rig = $rigRepository->getRigWithRigItemAndGpu($rigId);
+
+        if ($rig === null) {
+            throw new NotFoundException('Риг не найден');
+        }
+
+        return $rig;
+    }
+
+    /**
      * @throws InvalidArgumentException
      */
     public function removeRigById(int $rigId): void

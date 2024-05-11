@@ -8,6 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: RigItemRepository::class)]
 #[ORM\Index(name: 'rig_item__rig_id__ind', columns: ['rig_id'])]
+#[ORM\Index(name: 'rig_item__gpu_id__ind', columns: ['gpu_id'])]
 #[ORM\HasLifecycleCallbacks]
 class RigItem
 {
@@ -27,8 +28,8 @@ class RigItem
     #[Assert\NotBlank]
     private Rig $rig;
 
-    #[ORM\OneToOne()]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Gpu::class)]
+    #[ORM\JoinColumn(name: 'gpu_id', referencedColumnName: 'id', nullable: false)]
     #[Assert\NotBlank]
     private Gpu $gpu;
 

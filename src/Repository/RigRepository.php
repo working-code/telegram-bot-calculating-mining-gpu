@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Rig;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -31,5 +32,16 @@ class RigRepository extends ServiceEntityRepository
             ->andWhere($qb->expr()->eq('u.telegramId', $telegramId));
 
         return $qb->getQuery()->getResult();
+    }
+
+    public function getRigWithRigItemAndGpu(int $rigId): ?Rig
+    {
+        $qb = $this->createQueryBuilder('r');
+        $qb->join('r.items', 'i', Join::WITH)
+            ->join('i.gpu', 'g', Join::WITH)
+            ->addSelect('i,g')
+            ->andWhere($qb->expr()->eq('r.id', $rigId));
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 }

@@ -29,4 +29,9 @@ readonly class RigItemManager
 
         return $rigItem;
     }
+
+    public function remove(RigItem $rigItem): void
+    {
+        $this->em->remove($rigItem);
+    }
 }
