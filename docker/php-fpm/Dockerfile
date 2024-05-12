@@ -25,6 +25,7 @@ RUN apk update \
         sockets \
         bcmath \
         pdo_pgsql \
+        pcntl \
     && echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini \
     && echo "extension=memcached.so" > /usr/local/etc/php/conf.d/memcached.ini
 
