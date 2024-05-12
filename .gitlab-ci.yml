@@ -1,0 +1,54 @@
+stages:
+    - build
+    - switching
+    - rollback
+
+before_script:
+    - apt-get update -qq
+    - apt-get install -qq git
+    - 'which ssh-agent || ( apt-get install -qq openssh-client )'
+    - eval $(ssh-agent -s)
+    - ssh-add <(echo "$SSH_PRIVATE_KEY" | base64 -d)
+    - mkdir -p ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+
+build:
+    stage: build
+    image: ubuntu:22.04
+    script:
+        - export DIR=$(date +%Y%m%d_%H%M%S)
+        - echo "DIR=$DIR" >> file_with_env
+        - ssh $SSH_USER@$PROD_SERVER "mkdir -p /var/www/telegram-bot-calculating-mining-gpu &&
+            cd /var/www/telegram-bot-calculating-mining-gpu &&
+            git clone http://gitlab+deploy-token-3:gldt-mHsMCH8KxpFe9rzSEfZy@gitlab.local/svk/telegram-bot-calculating-mining-gpu.git $DIR &&
+            sudo chown www-data:www-data $DIR/ -R &&
+            cd $DIR &&
+            sh ./deploy/deploy.sh $DATABASE_HOST $DATABASE_USER $DATABASE_PASSWORD $DATABASE_NAME $RABBITMQ_HOST $RABBITMQ_USER $RABBITMQ_PASSWORD $REDIS_HOST $CURRENCY_URL $HASHRATE_URL $TELEGRAM_BOT_API_TOKEN"
+    only:
+        - master
+    artifacts:
+        paths:
+            - file_with_env
+
+switching:
+    stage: switching
+    image: ubuntu:22.04
+    script:
+        - source file_with_env
+        - ssh $SSH_USER@$PROD_SERVER "mkdir -p /var/www/telegram-bot-calculating-mining-gpu/shared/log &&
+            cd /var/www/telegram-bot-calculating-mining-gpu/$DIR &&
+            ln -s /var/www/telegram-bot-calculating-mining-gpu/shared/log /var/www/telegram-bot-calculating-mining-gpu/$DIR/var/log &&
+            ( [ ! -d /var/www/telegram-bot-calculating-mining-gpu/current ] || mv -Tf /var/www/telegram-bot-calculating-mining-gpu/current /var/www/telegram-bot-calculating-mining-gpu/previous ) &&
+            ln -s /var/www/telegram-bot-calculating-mining-gpu/$DIR /var/www/telegram-bot-calculating-mining-gpu/current"
+    only:
+        - master
+
+rollback:
+    stage: rollback
+    image: ubuntu:22.04
+    script:
+        - ssh $SSH_USER@$PROD_SERVER "unlink /var/www/telegram-bot-calculating-mining-gpu/current &&
+            mv -Tf /var/www/telegram-bot-calculating-mining-gpu/previous /var/www/telegram-bot-calculating-mining-gpu/current &&
+            cd /var/www/telegram-bot-calculating-mining-gpu/current &&
+            sh ./deploy/rollback.sh"
+    when: manual
