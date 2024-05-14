@@ -6,6 +6,7 @@ namespace App\Report;
 use App\Entity\Rig;
 use App\Exception\NotFoundException;
 use App\Service\RigService;
+use Psr\Cache\InvalidArgumentException;
 
 readonly class ProfitableAlgorithmsReport
 {
@@ -16,6 +17,7 @@ readonly class ProfitableAlgorithmsReport
 
     /**
      * @throws NotFoundException
+     * @throws InvalidArgumentException
      */
     public function getReportByTelegramId(int $telegramId): array
     {
@@ -29,7 +31,7 @@ readonly class ProfitableAlgorithmsReport
         $reportPart = "Для каждого алгоритма указан доход в сутки c указанного количества карт\n\n";
 
         foreach ($rigs as $rig) {
-            if ($rig->getItems()->count() === 0) {
+            if (!$rig->hasItems()) {
                 continue;
             }
 
@@ -37,6 +39,10 @@ readonly class ProfitableAlgorithmsReport
             $reportPart .= $this->createReport($calculationByRig, $rig);
             $report[] = $reportPart;
             $reportPart = '';
+        }
+
+        if (!$report) {
+            throw new NotFoundException('У вас нет карт, добавьте карты в риг');
         }
 
         return $report;

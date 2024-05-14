@@ -35,4 +35,15 @@ readonly class TelegramHelper
             sleep(1);
         }
     }
+
+    /**
+     * @throws TelegramSDKException
+     */
+    public function sendMessage(string $message, int $chatId): void
+    {
+        $this->telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text'    => $message,
+        ]);
+    }
 }

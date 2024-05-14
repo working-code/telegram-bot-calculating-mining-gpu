@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Telegram\Command;
 
-
 use App\Component\TelegramDialog\DialogManager;
 use App\Component\TelegramDialog\Exception\StorageException;
 use App\Telegram\Dialog\RemoveRigDialog;

@@ -71,6 +71,9 @@ readonly class RigService
         return $rigRepository->find($rigId);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function getCalculationByRig(Rig $rig): array
     {
         return $this->cache->get(

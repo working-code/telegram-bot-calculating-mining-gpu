@@ -148,4 +148,9 @@ class Rig
 
         return $this;
     }
+
+    public function hasItems(): bool
+    {
+        return $this->items->count() > 0;
+    }
 }

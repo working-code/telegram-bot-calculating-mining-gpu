@@ -2,11 +2,15 @@
 
 namespace App\Telegram\Handler;
 
+use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Keyboard\Keyboard;
 use Telegram\Bot\Objects\Update;
 
 trait askChoiceRigTrait
 {
+    /**
+     * @throws TelegramSDKException
+     */
     public function askChoiceRig(Update $update): void
     {
         $rigs = $this->rigService->getRigsByTelegramId($update->message?->chat?->id);

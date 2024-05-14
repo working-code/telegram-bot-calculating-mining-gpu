@@ -7,6 +7,7 @@ use App\Entity\Rig;
 use App\Entity\Work;
 use App\Exception\NotFoundException;
 use App\Service\RigService;
+use Psr\Cache\InvalidArgumentException;
 
 readonly class SettingsForProfitableAlgorithmsReport
 {
@@ -17,6 +18,7 @@ readonly class SettingsForProfitableAlgorithmsReport
 
     /**
      * @throws NotFoundException
+     * @throws InvalidArgumentException
      */
     public function getReportByRigId(int $rigId): array
     {
@@ -24,6 +26,10 @@ readonly class SettingsForProfitableAlgorithmsReport
 
         if (!$rig) {
             throw new NotFoundException('Сначала создайте риг');
+        }
+
+        if (!$rig->hasItems()) {
+            throw new NotFoundException('У вас нет карт, добавьте карты в риг');
         }
 
         $calculationByRig = $this->rigService->getCalculationByRig($rig);
