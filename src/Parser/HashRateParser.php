@@ -14,12 +14,14 @@ use App\Exception\ErrorGetPageException;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationErrorException;
 use App\Helper\ValueFilterHelper;
+use App\Service\Cache;
 use App\Service\CoinService;
 use App\Service\GpuService;
 use App\Service\WorkService;
 use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Throwable;
 
 readonly class HashRateParser
@@ -27,13 +29,14 @@ readonly class HashRateParser
     use ParserTrait;
 
     public function __construct(
-        private string            $hashRateUrl,
-        private Client            $httpClient,
-        private GpuService        $gpuService,
-        private LoggerInterface   $logger,
-        private CoinService       $coinService,
-        private ValueFilterHelper $valueFilterHelper,
-        private WorkService       $workService,
+        private string                 $hashRateUrl,
+        private Client                 $httpClient,
+        private GpuService             $gpuService,
+        private LoggerInterface        $logger,
+        private CoinService            $coinService,
+        private ValueFilterHelper      $valueFilterHelper,
+        private WorkService            $workService,
+        private TagAwareCacheInterface $cache,
     ) {
     }
 
@@ -58,7 +61,7 @@ readonly class HashRateParser
     /**
      * @throws ErrorGetPageException
      */
-    public function updateAdditionalWorkDataForGpu(Gpu $gpu): void
+    private function updateAdditionalWorkDataForGpu(Gpu $gpu): void
     {
         foreach ($gpu->getWorks() as $work) {
             $url = sprintf(
@@ -127,6 +130,7 @@ readonly class HashRateParser
             $this->getUpdateWorks();
 
             $this->logger->info('парсинг завершен');
+            $this->cache->invalidateTags([Cache::CACHE_TAG_CALCULATION_BY_RIG]);
         } catch (Throwable $exception) {
             $this->logger->error($exception->getMessage());
         }

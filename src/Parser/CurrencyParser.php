@@ -48,7 +48,7 @@ readonly class CurrencyParser
                 && $usdCurrency->getValue() !== $usdCurrencyDTO->getValue()
             ) {
                 $this->currencyService->updateCurrencyByCurrencyDTO($usdCurrency, $usdCurrencyDTO);
-                $this->cache->invalidateTags([Cache::CACHE_TAG_CURRENCY_USD]);
+                $this->cache->invalidateTags([Cache::CACHE_TAG_CURRENCY_USD, Cache::CACHE_TAG_CALCULATION_BY_RIG]);
             } elseif (!$usdCurrency) {
                 $this->currencyService->createCurrencyByCurrencyDTO($usdCurrencyDTO);
             }
