@@ -23,6 +23,7 @@ readonly class RigService
     private const  COUNT_OF_DAY_IN_MONTH         = 30;
     private const  COUNT_OF_DAY_IN_YEAR          = 365;
     private const  COUNT_OF_PROFITABLE_ALGORITHM = 5;
+    private const  COUNT_HOURS_IN_DAY            = 24;
 
     public function __construct(
         private RigManager             $rigManager,
@@ -50,25 +51,6 @@ readonly class RigService
         }
 
         return $rig;
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function removeRigById(int $rigId): void
-    {
-        $rig = $this->getRigById($rigId);
-        $this->rigManager->remove($rig);
-        $this->rigManager->emFlush();
-
-        $this->cache->delete(Cache::CALCULATION_BY_RIG_KEY . $rig->getId());
-    }
-
-    public function getRigById(int $rigId): ?Rig
-    {
-        $rigRepository = $this->em->getRepository(Rig::class);
-
-        return $rigRepository->find($rigId);
     }
 
     /**
@@ -108,7 +90,7 @@ readonly class RigService
                     $workPowerConsumption += $item->getPowerConsumption() * $rigItem->getCount();
                 }
 
-                $profit = $workRevenue - $workPowerConsumption
+                $profit = $workRevenue - $workPowerConsumption * self::COUNT_HOURS_IN_DAY
                     / self::COUNT_OF_WATTS_IN_KW * $efficiency * $electricityCost;
 
                 $workList[] = [
@@ -133,7 +115,7 @@ readonly class RigService
             foreach ($workList as $workIndex => $itemData) {
                 if (!isset($totalRows[$workIndex])) {
                     $totalRows[$workIndex]['profitPerDayInUsd'] = -$rig->getMotherboardConsumption()
-                        / self::COUNT_OF_WATTS_IN_KW * $efficiency * $electricityCost;
+                        * self::COUNT_HOURS_IN_DAY / self::COUNT_OF_WATTS_IN_KW * $efficiency * $electricityCost;
                 }
 
                 $totalRows[$workIndex]['profitPerDayInUsd'] += $itemData['profitInUsd'];
@@ -205,6 +187,7 @@ readonly class RigService
      * @param GpuDTO[] $gpuList
      *
      * @throws NotFoundException
+     * @throws InvalidArgumentException
      */
     public function addListGpuInRig(array $gpuList, int $rigId): void
     {
@@ -224,5 +207,33 @@ readonly class RigService
         }
 
         $this->rigItemManager->emFlush();
+        $this->removeCalculationByRigFromCache($rigId);
+    }
+
+    public function getRigById(int $rigId): ?Rig
+    {
+        $rigRepository = $this->em->getRepository(Rig::class);
+
+        return $rigRepository->find($rigId);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function removeCalculationByRigFromCache(int $rigId): void
+    {
+        $this->cache->delete(Cache::CALCULATION_BY_RIG_KEY . $rigId);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function removeRigById(int $rigId): void
+    {
+        $rig = $this->getRigById($rigId);
+        $this->rigManager->remove($rig);
+        $this->rigManager->emFlush();
+
+        $this->removeCalculationByRigFromCache($rigId);
     }
 }

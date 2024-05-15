@@ -106,7 +106,7 @@ readonly class CurrencyService
      */
     public function convertUsdInRub(float $usd): float
     {
-        $result = bcmul((string)$usd, $this->getUsdValue(), self::CONVERT_SCALE);
+        $result = bcmul(sprintf("%.4F", $usd), $this->getUsdValue(), self::CONVERT_SCALE);
 
         return (float)$result;
     }

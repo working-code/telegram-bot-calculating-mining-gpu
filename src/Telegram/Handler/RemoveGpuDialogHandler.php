@@ -9,6 +9,7 @@ use App\Helper\ValueFilterHelper;
 use App\Service\RigItemService;
 use App\Service\RigService;
 use App\Telegram\Dialog\RemoveGpuDialog;
+use Psr\Cache\InvalidArgumentException;
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Keyboard\Keyboard;
@@ -108,15 +109,18 @@ class RemoveGpuDialogHandler extends BaseDialogHandler
 
     /**
      * @throws TelegramSDKException
+     * @throws InvalidArgumentException
      */
     private function removeGpu(): void
     {
         $this->rigItemService->removeRigItemByIds($this->getDialog()->getRigItemIds());
+        $this->rigService->removeCalculationByRigFromCache($this->getDialog()->getRigId());
         $this->sendMessage('Карты удалены');
     }
 
     /**
      * @throws TelegramSDKException
+     * @throws InvalidArgumentException
      */
     public function checkResponseRemoveGpu(Update $update): void
     {
