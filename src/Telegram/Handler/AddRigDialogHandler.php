@@ -90,7 +90,7 @@ class AddRigDialogHandler extends BaseDialogHandler
     {
         $messageText = $update->message?->text;
 
-        if (!empty($messageText)) {
+        if (isset($messageText)) {
             $rigDTO = $this->getDialog()->getRigDTO();
             $rigDTO->setElectricityCost($this->valueFilterHelper->getFloatFrom($messageText));
             $errors = $this->validator->validate($rigDTO, groups: RigDTO::STEP_ELECTRICITY_COST);
@@ -121,7 +121,7 @@ class AddRigDialogHandler extends BaseDialogHandler
     {
         $messageText = $update->message?->text;
 
-        if (!empty($messageText)) {
+        if (isset($messageText)) {
             $rigDTO = $this->getDialog()->getRigDTO();
             $rigDTO->setPowerSupplyEfficiency($this->valueFilterHelper->getIntFrom($messageText));
             $errors = $this->validator->validate($rigDTO, groups: RigDTO::STEP_POWER_SUPPLY_EFFICIENCY);
@@ -155,7 +155,7 @@ class AddRigDialogHandler extends BaseDialogHandler
     {
         $messageText = $update->message?->text;
 
-        if (!empty($messageText)) {
+        if (isset($messageText)) {
             $rigDTO = $this->getDialog()->getRigDTO();
             $rigDTO->setMotherboardConsumption($this->valueFilterHelper->getIntFrom($messageText));
             $errors = $this->validator->validate($rigDTO, groups: RigDTO::STEP_MOTHERBOARD_CONSUMPTION);

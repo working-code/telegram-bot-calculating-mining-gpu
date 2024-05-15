@@ -139,7 +139,7 @@ class AddGpuDialogHandler extends BaseDialogHandler
     {
         $messageText = $update->message?->text;
 
-        if ($messageText) {
+        if (isset($messageText)) {
             $gpuCount = $this->valueFilterHelper->getIntFrom($messageText);
             $this->getDialog()->getGpuDTO()->setCount($gpuCount);
 
